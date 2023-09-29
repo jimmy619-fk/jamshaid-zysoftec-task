@@ -1,0 +1,52 @@
+/* jaisy screen bari ho pic mat bari ho sath max 500 tk jaye */
+/* post component till 500px */
+.post {
+  max-width: 500px;
+  background-color: white;
+  /* border dedo ird gird post kay */
+  border: 1px solid lightgray;
+  margin-bottom: 45px;
+  padding: 20px;
+  margin-top: 10px;
+}
+
+.post__image {
+  width: 100%;
+  object-fit: contain;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+.post__text {
+  font-weight: normal;
+  padding: 20px;
+}
+.post__header {
+  padding: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.post__avatar {
+  margin-right: 10px;
+}
+
+.comment__wrapper {
+  display: flex;
+  margin: 10px;
+}
+.comment__Input {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  border-top: 1px solid lightgray;
+  border-bottom: 1px solid lightgray;
+}
+.comment__button {
+  flex: 0;
+}
+
+.post__comments {
+  padding: 20px;
+}
+
+

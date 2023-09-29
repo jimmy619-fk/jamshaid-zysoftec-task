@@ -1,0 +1,235 @@
+import { Button, Input, Modal } from "@mui/material";
+import { Box } from "@mui/system";
+import { useEffect, useState } from "react";
+
+import "./App.css";
+import db, { auth } from "./firebase";
+import ImageUpload from "./ImageUpload";
+import Post from "./Post";
+
+// modal style from material ui
+const style = {
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
+  width: 400,
+  bgcolor: "background.paper",
+  border: "2px solid #000",
+  boxShadow: 24,
+  pt: 2,
+  px: 4,
+  pb: 3,
+};
+
+function App() {
+  //state=> short term memory
+  const [posts, setPosts] = useState([
+    // {
+    //   username: "Jimmy",
+    //   caption: "Woww manzzz!!!",
+    //   imageUrl: "https://patterns.dev/img/reactjs/react-logo@3x.svg",
+    // },
+    // {
+    //   username: "Hammad",
+    //   caption: "Shitty manzzzzzzz",
+    //   imageUrl:
+    //     "https://english.cdn.zeenews.com/sites/default/files/styles/zm_700x400/public/2022/01/18/1006619-emraan-hashmi-look-news.jpg",
+    // },
+  ]);
+  const [open, setOpen] = useState(false);
+
+  const [username, setUsername] = useState("");
+  const [opensignin, setopensignin] = useState(false);
+  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
+  // creates user
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((authUser) => {
+      if (authUser) {
+        // user has logged in
+        console.log(authUser);
+        // survive refresh if some user refreshes  this will check using cooking tracking that
+        // is user already there
+        setUser(authUser);
+      } else {
+        // user has logged out
+        setUser(null);
+      }
+
+      return () => {
+        // before the conditionof this code run detavh previous so we dont have duplicates
+        unsubscribe();
+      };
+    });
+    // everytime the user and username change this code has <to></to> change
+  }, [user, username]);
+  const signup = (event) => {
+    event.preventDefault();
+    auth
+      .createUserWithEmailAndPassword(email, password)
+      .then((authUser) => {
+        // return because its promise
+        return authUser.user.updateProfile({
+          displayName: username,
+        });
+      })
+      .catch((error) => alert(error.message));
+  };
+  const signin = (e) => {
+    e.preventDefault();
+    auth
+      .signInWithEmailAndPassword(email, password)
+      .catch((error) => alert(error.message));
+    // close model
+    setopensignin(false);
+  };
+  useEffect(() => {
+    // snasshot is like a listener,every single time the document changes in firebase it takes snapshot
+    // this snapshot code runs when any stuff changes in firebase
+    // in order use orderBy method
+    db.collection("posts")
+      .orderBy("timestamp", "desc")
+      .onSnapshot((snapshot) => {
+        // map through all the documents and give data which is on righ side of docs
+        // the code below will refresh all the posts when page loads
+        // setPosts(snapshot.docs.map((doc) => doc.data()));
+
+        // below code will only refresh individual post
+        setPosts(
+          snapshot.docs.map((doc) => ({
+            // specific post id
+            id: doc.id,
+            // data of specific post
+            post: doc.data(),
+          }))
+        );
+      });
+  }, []);
+  return (
+    <>
+      <div className="App">
+        {/* <Button onClick={() => setOpen(true)}>Open modal</Button> */}
+        {/* when we click outside the modal it will onClose=false */}
+        <Modal open={open} onClose={() => setOpen(false)}>
+          <Box sx={style}>
+            <form action="" className="app__signup">
+              <center>
+                <img
+                  src="https://play-lh.googleusercontent.com/9ASiwrVdio0I2i2Sd1UzRczyL81piJoKfKKBoC8PUm2q6565NMQwUJCuNGwH-enhm00"
+                  alt=""
+                  className="logo__image"
+                />
+                <Input
+                  placeholder="username"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                />
+                <Input
+                  placeholder="email"
+                  type="text"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+                <Input
+                  placeholder="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+
+                <Button type="submit" onClick={signup}>
+                  SignUP
+                </Button>
+              </center>
+            </form>
+          </Box>
+        </Modal>
+        <Modal open={opensignin} onClose={() => setopensignin(false)}>
+          <Box sx={style}>
+            <form action="" className="app__signup">
+              <center>
+                <img
+                  src="https://play-lh.googleusercontent.com/9ASiwrVdio0I2i2Sd1UzRczyL81piJoKfKKBoC8PUm2q6565NMQwUJCuNGwH-enhm00"
+                  alt=""
+                  className="logo__image"
+                />
+
+                <Input
+                  placeholder="email"
+                  type="text"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+                <Input
+                  placeholder="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+
+                <Button type="submit" onClick={signin}>
+                  Signin
+                </Button>
+              </center>
+            </form>
+          </Box>
+        </Modal>
+
+        {/* <h1>hey jimmy welcome baba!!!</h1> */}
+        {/* BEM convention */}
+        <div className="app__header">
+          <img src="instagram.png" alt="" className="header__img" />
+          {user ? (
+            <Button onClick={() => auth.signOut()}>Logout</Button>
+          ) : (
+            <div className="login__container">
+              <Button onClick={() => setopensignin(true)}>Sign In</Button>
+              <Button onClick={() => setOpen(true)}>Sign Up</Button>
+            </div>
+          )}
+        </div>
+        {/* use map for auto adding data  */}
+        {/* destructue post not posts to solve error */}
+        {posts.map(({ id, post }) => (
+          <Post
+            // if we dont add key it will refresh all the posts
+            key={id}
+            postId={id}
+            user={user}
+            username={post.username}
+            caption={post.caption}
+            imageUrl={post.imageUrl}
+          />
+        ))}
+        {/* pass data through props :adding dynamically */}
+        <Post
+          username="Jimmy"
+          caption="Woww manzzz!!!"
+          imageUrl="https://patterns.dev/img/reactjs/react-logo@3x.svg"
+        />
+        <Post
+          username="Hammad"
+          caption="Shitty manzzzzzzz"
+          imageUrl="https://english.cdn.zeenews.com/sites/default/files/styles/zm_700x400/public/2022/01/18/1006619-emraan-hashmi-look-news.jpg"
+        />
+        <Post
+          username="Jamshaid"
+          caption="bad boy hereeee!!!"
+          imageUrl="https://wallpaperaccess.com/full/5084449.jpg"
+        />
+        {/* passing displayname as props to imageupload */}
+        {user?.displayName ? (
+          <ImageUpload username={user.displayName} />
+        ) : (
+          <h3>Sorry! Login to upload</h3>
+        )}
+      </div>
+    </>
+  );
+}
+
+export default App;
